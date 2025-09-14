@@ -1,33 +1,29 @@
 pipeline {
     agent any
 
-    // --- Environment Variables ---
+
     environment {
-        // AWS settings
-        AWS_REGION = 'ap-south-1'                       // Change to your region
-        ECR_REPO = '667917564293.dkr.ecr.ap-south-1.amazonaws.com/myapp-app'                 // Change to your ECR repo URI
-        IMAGE_TAG = "${BUILD_NUMBER}"                   // Use Jenkins build number as image tag
-
-        // Kubernetes settings
-        K8S_NAMESPACE = 'default'                       // Change if using custom namespace
-        K8S_DEPLOYMENT_FILE = 'k8s/deployment.yml'     // Path to your deployment YAML
-        K8S_SERVICE_FILE = 'k8s/svc.yml'               // Path to your service YAML
-
-        // Optional: AWS credentials ID from Jenkins credentials store
-        AWS_CREDENTIALS_ID = 'aws-credentials'          // Create in Jenkins > Credentials
+        
+        AWS_REGION = 'ap-south-1'                       
+        ECR_REPO = '667917564293.dkr.ecr.ap-south-1.amazonaws.com/myapp-app'                 
+        IMAGE_TAG = "${BUILD_NUMBER}"                   
+        K8S_NAMESPACE = 'default'                       
+        K8S_DEPLOYMENT_FILE = 'k8s/deployment.yml'     
+        K8S_SERVICE_FILE = 'k8s/svc.yml'               
+        AWS_CREDENTIALS_ID = 'aws-credentials'         
     }
 
     stages {
 
-        // --- 1. Checkout Code ---
+        
         stage('Checkout') {
             steps {
                 git branch: 'main', 
-                    url: 'https://github.com/RuturajGidde/demoapp.git' // Change repo URL
+                    url: 'https://github.com/RuturajGidde/demoapp.git' 
             }
         }
 
-        // --- 2. Run Unit Tests ---
+        
         stage('Run Tests') {
             steps {
                 
@@ -35,7 +31,7 @@ pipeline {
             }
         }
 
-        // --- 3. Build Docker Image ---
+        
         stage('Build Docker Image') {
             steps {
                 script {
@@ -46,7 +42,7 @@ pipeline {
             }
         }
 
-        // --- 4. Login to AWS ECR ---
+        
         stage('Login to ECR') {
             steps {
                 withCredentials([[
@@ -65,7 +61,7 @@ pipeline {
             }
         }
 
-        // --- 5. Push Docker Image to ECR ---
+        
         stage('Push to ECR') {
             steps {
                 sh """
@@ -74,7 +70,7 @@ pipeline {
             }
         }
 
-        // --- 6. Deploy to Kubernetes ---
+        
         stage('Deploy to EKS') {
             steps {
                 withCredentials([[
