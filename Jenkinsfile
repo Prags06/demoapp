@@ -1,29 +1,33 @@
 pipeline {
     agent any
 
-
+    // --- Environment Variables ---
     environment {
-        
-        AWS_REGION = 'ap-south-1'                       
-        ECR_REPO = '667917564293.dkr.ecr.ap-south-1.amazonaws.com/myapp-app'                 
-        IMAGE_TAG = "${BUILD_NUMBER}"                   
-        K8S_NAMESPACE = 'default'                       
-        K8S_DEPLOYMENT_FILE = 'k8s/deployment.yml'     
-        K8S_SERVICE_FILE = 'k8s/svc.yml'               
-        AWS_CREDENTIALS_ID = 'aws-credentials'         
+        // AWS settings
+        AWS_REGION = 'ap-south-1'                       // Change to your region
+        ECR_REPO = '667917564293.dkr.ecr.ap-south-1.amazonaws.com/mynewapp-app'                 // Change to your ECR repo URI
+        IMAGE_TAG = "${BUILD_NUMBER}"                   // Use Jenkins build number as image tag
+
+        // Kubernetes settings
+        K8S_NAMESPACE = 'default'                       // Change if using custom namespace
+        K8S_DEPLOYMENT_FILE = 'k8s/deployment.yml'     // Path to your deployment YAML
+        K8S_SERVICE_FILE = 'k8s/svc.yml'               // Path to your service YAML
+
+        // Optional: AWS credentials ID from Jenkins credentials store
+        AWS_CREDENTIALS_ID = 'aws-credentials'          // Create in Jenkins > Credentials
     }
 
     stages {
 
-        
+        // --- 1. Checkout Code ---
         stage('Checkout') {
             steps {
                 git branch: 'main', 
-                    url: 'https://github.com/RuturajGidde/demoapp.git' 
+                    url: 'https://github.com/RuturajGidde/demoapp.git' // Change repo URL
             }
         }
 
-        
+        // --- 2. Run Unit Tests ---
         stage('Run Tests') {
             steps {
                 
@@ -31,7 +35,7 @@ pipeline {
             }
         }
 
-        
+        // --- 3. Build Docker Image ---
         stage('Build Docker Image') {
             steps {
                 script {
@@ -42,7 +46,7 @@ pipeline {
             }
         }
 
-        
+        // --- 4. Login to AWS ECR ---
         stage('Login to ECR') {
             steps {
                 withCredentials([[
@@ -61,7 +65,7 @@ pipeline {
             }
         }
 
-        
+        // --- 5. Push Docker Image to ECR ---
         stage('Push to ECR') {
             steps {
                 sh """
@@ -70,7 +74,7 @@ pipeline {
             }
         }
 
-        
+        // --- 6. Deploy to Kubernetes ---
         stage('Deploy to EKS') {
             steps {
                 withCredentials([[
@@ -79,7 +83,7 @@ pipeline {
                 ]]) {
                     sh '''
                     # Update kubeconfig
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name myapp-eks
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name mynewapp-eks
 
                     # Replace image placeholder in deployment YAML
                     sed -i "s|PLACEHOLDER_IMAGE|${ECR_REPO}:${IMAGE_TAG}|g" ${K8S_DEPLOYMENT_FILE}
@@ -88,9 +92,18 @@ pipeline {
                     kubectl apply -f ${K8S_DEPLOYMENT_FILE} -n ${K8S_NAMESPACE}
                     kubectl apply -f ${K8S_SERVICE_FILE} -n ${K8S_NAMESPACE}
 
-                    # Optional: Rollout status
-                    # DEPLOYMENT_NAME=$(grep 'name:' ${K8S_DEPLOYMENT_FILE} | head -1 | awk '{print $2}')
-                    # kubectl rollout status deployment/$DEPLOYMENT_NAME -n ${K8S_NAMESPACE}
+                    # Quick status check (no waiting)
+                    DEPLOYMENT_NAME=$(grep 'name:' ${K8S_DEPLOYMENT_FILE} | head -1 | awk '{print $2}')
+                    kubectl rollout status deployment/$DEPLOYMENT_NAME -n ${K8S_NAMESPACE} --watch=false
+                    STATUS=$?
+
+                    if [ $STATUS -ne 0 ]; then
+                      echo "Deployment seems unhealthy, rolling back..."
+                      kubectl rollout undo deployment/$DEPLOYMENT_NAME -n ${K8S_NAMESPACE}
+                    else
+                      echo "Deployment triggered successfully (not waiting for pods to be ready)."
+                    fi
+                    set -e
                     '''
                 }
             }
