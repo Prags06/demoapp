@@ -41,7 +41,7 @@ class TestApp(unittest.TestCase):
     def test_name_route(self):
         response = self.client.get('/name')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"ruturaj gidde", response.data)
+        self.assertIn(b"I am Ruturaj Gidde", response.data)
 
     def test_phone_route(self):
         response = self.client.get('/phone')
