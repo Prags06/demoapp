@@ -74,6 +74,16 @@ pipeline {
             }
         }
 
+                stage('Approval Before Deploy') {
+            steps {
+                script {
+                    timeout(time: 1, unit: 'HOURS') {   // Wait for max 1 hour
+                        input message: "Approve deployment to EKS?", ok: "Deploy"
+                    }
+                }
+            }
+        }
+
         // --- 6. Deploy to Kubernetes ---
         stage('Deploy to EKS') {
             steps {
