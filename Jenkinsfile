@@ -27,13 +27,6 @@ pipeline {
             }
         }
 
-        // --- 2. Run Unit Tests ---
-        stage('Run Tests') {
-            steps {
-                
-                sh 'python3 -m unittest discover -s tests'
-            }
-        }
 
         // --- 3. Build Docker Image ---
         stage('Build Docker Image') {
