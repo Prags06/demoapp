@@ -5,7 +5,7 @@ pipeline {
     environment {
         // AWS settings
         AWS_REGION = 'ap-south-1'                       // Change to your region
-        ECR_REPO = '667917564293.dkr.ecr.ap-south-1.amazonaws.com/mynewapp-app'                 // Change to your ECR repo URI
+        ECR_REPO = '513371322378.dkr.ecr.ap-south-1.amazonaws.com/mynewapp-app'                 // Change to your ECR repo URI
         IMAGE_TAG = "${BUILD_NUMBER}"                   // Use Jenkins build number as image tag
 
         // Kubernetes settings
@@ -23,7 +23,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main', 
-                    url: 'https://github.com/RuturajGidde/demoapp.git' // Change repo URL
+                    url: 'https://github.com/Prags06/demoapp.git' // Change repo URL
             }
         }
 
