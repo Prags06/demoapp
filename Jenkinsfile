@@ -93,7 +93,7 @@ pipeline {
                 ]]) {
                     sh '''
                     # Update kubeconfig
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name mynewapp-eks
+                    aws eks update-kubeconfig --region ${AWS_REGION} --name jenkinscluster
 
                     # Replace image placeholder in deployment YAML
                     sed -i "s|PLACEHOLDER_IMAGE|${ECR_REPO}:${IMAGE_TAG}|g" ${K8S_DEPLOYMENT_FILE}
